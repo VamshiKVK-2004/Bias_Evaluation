@@ -1,6 +1,8 @@
 """Analysis package."""
 
+from biaseval.analysis.stereotype import run as run_stereotype
+
 
 def run() -> None:
     """Entry function for analysis stage."""
-    print("- analyzing outputs for disparities and trends")
+    run_stereotype()

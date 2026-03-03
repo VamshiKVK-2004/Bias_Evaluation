@@ -1,45 +1,77 @@
+# Byte-compiled / optimized / DLL files
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+.Python
+build/
+dist/
+downloads/
+.eggs/
+*.egg-info/
+*.egg
+pip-wheel-metadata/
 
 # Virtual environments
 .venv/
 venv/
+env/
+ENV/
 
-# Distribution/build folders
-build/
-dist/
-*.egg-info/
-
-# Pytest cache
+# Python tooling caches
 .pytest_cache/
-
-# Mypy cache
 .mypy_cache/
+.ruff_cache/
+.pyre/
+.hypothesis/
+.nox/
+.tox/
 
-# Jupyter Notebook checkpoints
+# Coverage reports
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# Jupyter
 .ipynb_checkpoints/
 
-# Environment variables file
+# Logs and temp files
+*.log
+*.tmp
+*.temp
+*.pid
+*.seed
+
+# Local databases / state
+*.sqlite
+*.sqlite3
+*.db
+
+# Local environment and secrets
 .env
-# MacOS
-.DS_Store
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*.jks
+*.keystore
+secrets.*
 
 # Editor directories and files
 .vscode/
 .idea/
 
-# Data and artifacts
+# OS files
+.DS_Store
+Thumbs.db
+
+# Project artifacts
 artifacts/
 */artifacts/
-
-# logs
-*.log
-
-# temporary files
-*.tmp
-*.temp
-
-# coverage reports
-htmlcov/
-.coverage
-coverage.xml
+reports/
+outputs/

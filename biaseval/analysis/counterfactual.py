@@ -155,9 +155,17 @@ def compute_counterfactual_metrics(df: pd.DataFrame, prompts: pd.DataFrame) -> p
     for score_col in score_cols:
         pvt = _pivot_variants(merged, score_col)
 
-        pvt[f"delta_{score_col}_biased_minus_neutral"] = pvt["biased"] - pvt["neutral"]
-        pvt[f"delta_{score_col}_counterfactual_minus_neutral"] = pvt["counterfactual"] - pvt["neutral"]
-        pvt[f"delta_{score_col}_counterfactual_minus_biased"] = pvt["counterfactual"] - pvt["biased"]
+        neutral = pvt["neutral"] if "neutral" in pvt.columns else pd.Series(np.nan, index=pvt.index)
+        biased = pvt["biased"] if "biased" in pvt.columns else pd.Series(np.nan, index=pvt.index)
+        counterfactual = (
+            pvt["counterfactual"]
+            if "counterfactual" in pvt.columns
+            else pd.Series(np.nan, index=pvt.index)
+        )
+
+        pvt[f"delta_{score_col}_biased_minus_neutral"] = biased - neutral
+        pvt[f"delta_{score_col}_counterfactual_minus_neutral"] = counterfactual - neutral
+        pvt[f"delta_{score_col}_counterfactual_minus_biased"] = counterfactual - biased
 
         keep = _analysis_key(merged) + [
             f"delta_{score_col}_biased_minus_neutral",

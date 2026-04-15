@@ -92,6 +92,20 @@ def _max_prompts_limit() -> int | None:
     return max(1, parsed)
 
 
+def _is_retriable_error(error: str) -> bool:
+    normalized = (error or "").strip().lower()
+    if not normalized:
+        return False
+    if normalized.startswith(("timeout", "timed out", "connection reset")):
+        return True
+    if normalized.startswith("http_"):
+        status_code = normalized.split(":", 1)[0].replace("http_", "").strip()
+        if status_code.isdigit():
+            code = int(status_code)
+            return code == 429 or code >= 500
+    return False
+
+
 def _persist_results(rows: list[dict[str, Any]], output_dir: Path) -> Path:
     output_dir.mkdir(parents=True, exist_ok=True)
     if rows:
@@ -172,6 +186,8 @@ def run() -> None:
                     if not error:
                         break
                     if error.startswith("missing "):
+                        break
+                    if not _is_retriable_error(error):
                         break
                     if attempt < MAX_RETRIES - 1:
                         time.sleep(BACKOFF_BASE_S**attempt)

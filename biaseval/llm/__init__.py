@@ -92,6 +92,21 @@ def _max_prompts_limit() -> int | None:
     return max(1, parsed)
 
 
+def _selected_providers() -> set[str] | None:
+    value = os.getenv("BIASEVAL_SELECTED_PROVIDERS")
+    if not value:
+        return None
+
+    parsed = {part.strip().lower() for part in value.split(",") if part.strip()}
+    if not parsed:
+        return None
+
+    if "both" in parsed:
+        parsed.remove("both")
+        parsed.update({"gemini", "huggingface"})
+    return parsed
+
+
 def _is_retriable_error(error: str) -> bool:
     normalized = (error or "").strip().lower()
     if not normalized:
@@ -133,6 +148,10 @@ def run() -> None:
         print(f"[biaseval] limiting collect stage to first {prompt_limit} prompts (BIASEVAL_MAX_PROMPTS)")
 
     experiments = _load_experiments(Path("config/experiments.yaml"))
+    selected_providers = _selected_providers()
+    if selected_providers is not None:
+        experiments = [exp for exp in experiments if exp.get("provider") in selected_providers]
+        print(f"[biaseval] collect provider filter enabled: {sorted(selected_providers)}")
 
     clients = {
         "openai": OpenAIClient(),

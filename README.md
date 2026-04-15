@@ -90,6 +90,15 @@ python -m biaseval.run --preprocess
 
 # Compare two models (e.g., Gemini + Meta Llama on Hugging Face) and generate visual outputs
 python -m biaseval.run --collect --preprocess --analyze --aggregate --validate --visualize
+
+# Run collect stage with only first 20 prompts
+python -m biaseval.run --collect --max-prompts 20
+
+# Run full pipeline for only one provider
+python -m biaseval.run --models gemini
+
+# Run full pipeline for both default providers
+python -m biaseval.run --models both
 ```
 
 Runner behavior:
@@ -97,6 +106,8 @@ Runner behavior:
 - If no stage flags are passed, all stages run.
 - Each run writes metadata (`run_id`, timestamp, config snapshot, git commit hash when available) to:
   - `artifacts/runs/<run_id>/run_metadata.json`
+- `--max-prompts` sets prompt count for collect stage (same effect as `BIASEVAL_MAX_PROMPTS`).
+- `--models` controls providers used by collect stage (`gemini`, `huggingface`, `openai`, or `both`).
 
 ## How to run the UI dashboard (Streamlit)
 

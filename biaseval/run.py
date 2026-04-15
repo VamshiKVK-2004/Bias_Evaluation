@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import uuid
 from dataclasses import dataclass
@@ -112,12 +113,41 @@ def build_parser() -> argparse.ArgumentParser:
         default=Path("artifacts/runs"),
         help="Output directory for per-run metadata",
     )
+    parser.add_argument(
+        "--max-prompts",
+        type=int,
+        default=None,
+        help=(
+            "Limit number of prompts used during collect stage. "
+            "Overrides BIASEVAL_MAX_PROMPTS when provided."
+        ),
+    )
+    parser.add_argument(
+        "--models",
+        nargs="+",
+        default=None,
+        metavar="PROVIDER",
+        choices=("gemini", "huggingface", "openai", "both"),
+        help=(
+            "Choose provider(s) for collect stage. "
+            "Use one provider (e.g., gemini) or both for gemini+huggingface."
+        ),
+    )
     return parser
 
 
 def main() -> None:
     load_dotenv()
     args = build_parser().parse_args()
+
+    if args.max_prompts is not None:
+        if args.max_prompts < 1:
+            raise ValueError("--max-prompts must be >= 1")
+        os.environ["BIASEVAL_MAX_PROMPTS"] = str(args.max_prompts)
+
+    if args.models:
+        selected_models = ["gemini", "huggingface"] if "both" in args.models else args.models
+        os.environ["BIASEVAL_SELECTED_PROVIDERS"] = ",".join(selected_models)
 
     weights = _load_yaml(args.config_dir / "weights.yaml")
     experiments = _load_yaml(args.config_dir / "experiments.yaml")

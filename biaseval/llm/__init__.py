@@ -129,6 +129,7 @@ def run() -> None:
 
     run_id = uuid.uuid4().hex
     rows: list[dict[str, Any]] = []
+    active_provider_count = 0
 
     total_requests = len(prompts) * len(TEMPERATURES) * len(experiments)
     completed_requests = 0
@@ -144,6 +145,7 @@ def run() -> None:
             continue
 
         client = clients[provider]
+        active_provider_count += 1
         min_interval_s = _min_interval_seconds(provider, experiment)
         print(
             f"[biaseval] collect provider={provider} model={model} prompts={len(prompts)} "
@@ -193,6 +195,13 @@ def run() -> None:
                 completed_requests += 1
                 if completed_requests % 25 == 0:
                     print(f"[biaseval] collect progress: {completed_requests}/{total_requests} requests")
+
+    if active_provider_count == 0:
+        raise RuntimeError(
+            "No providers are runnable: missing API credentials for all configured providers. "
+            "Set keys in .env (e.g., GEMINI_API_KEY, HUGGINGFACE_API_KEY, OPENAI_API_KEY) "
+            "or update config/experiments.yaml to use available providers."
+        )
 
     artifact = _persist_results(rows, Path("artifacts"))
     error_series = pd.Series([(row.get("error") or "").strip() for row in rows], dtype="object")

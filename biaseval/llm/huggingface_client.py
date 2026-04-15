@@ -17,6 +17,10 @@ class HuggingFaceClient:
     def __init__(self, api_key: str | None = None, timeout_s: int = 60) -> None:
         self.api_key = api_key or os.getenv("HUGGINGFACE_API_KEY") or os.getenv("HF_TOKEN")
         self.timeout_s = timeout_s
+        self.base_url = os.getenv(
+            "HUGGINGFACE_INFERENCE_BASE_URL",
+            "https://router.huggingface.co/hf-inference",
+        ).rstrip("/")
 
     def generate(self, prompt: str, model: str, temperature: float, seed: int | None = None) -> dict[str, Any]:
         """Generate text for a prompt.
@@ -38,7 +42,7 @@ class HuggingFaceClient:
                 "raw": None,
             }
 
-        endpoint = f"https://api-inference.huggingface.co/models/{urllib.parse.quote(model)}"
+        endpoint = f"{self.base_url}/models/{urllib.parse.quote(model)}"
         payload: dict[str, Any] = {
             "inputs": prompt,
             "parameters": {

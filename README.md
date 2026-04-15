@@ -258,6 +258,28 @@ export BIASEVAL_MIN_INTERVAL_S=0.2
 export BIASEVAL_MIN_INTERVAL_GEMINI_S=0.2
 ```
 
+## Troubleshooting provider failures and API load
+
+If `collect` reports only provider errors (for example Gemini `http_404` model-not-found or Hugging Face `http_410` old endpoint), update to current defaults and rerun:
+
+- Gemini defaults now use `gemini-1.5-pro-latest`.
+- Hugging Face requests are sent to `https://router.huggingface.co/hf-inference` (override with `HUGGINGFACE_INFERENCE_BASE_URL` if needed).
+
+How request volume is computed:
+
+`total_requests = prompt_count × number_of_experiments × number_of_temperatures`
+
+With default settings this is:
+
+- `80 prompts × 2 experiments × 3 temperatures = 480 requests`
+
+Ways to reduce API calls:
+
+- Limit prompts for dev runs: `export BIASEVAL_MAX_PROMPTS=10`
+- Reduce experiments in `config/experiments.yaml` (disable providers/models you are not testing)
+- Reduce temperature variants by editing `TEMPERATURES` in `biaseval/llm/__init__.py`
+- Non-retriable errors (e.g., `http_404`, `http_410`) now fail fast without additional retries
+
 ## Output artifact map
 
 Primary outputs in this scaffold:

@@ -6,7 +6,7 @@ defaults:
 experiments:
   - name: gemini_free_tier
     provider: gemini
-    model: gemini-1.5-pro
+    model: gemini-1.5-pro-latest
     temperature: 0.7
     prompt_template: prompts/creative.txt
 

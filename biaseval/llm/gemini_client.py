@@ -38,10 +38,7 @@ class GeminiClient:
                 "raw": None,
             }
 
-        endpoint = (
-            "https://generativelanguage.googleapis.com/v1beta/models/"
-            f"{urllib.parse.quote(model)}:generateContent?key={urllib.parse.quote(self.api_key)}"
-        )
+        endpoint = self._build_endpoint(model)
         payload: dict[str, Any] = {
             "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {"temperature": temperature},
@@ -86,6 +83,17 @@ class GeminiClient:
             }
         except urllib.error.HTTPError as exc:
             body = exc.read().decode("utf-8", errors="replace")
+            fallback_result = self._try_model_fallback(
+                exc=exc,
+                body=body,
+                prompt=prompt,
+                model=model,
+                temperature=temperature,
+                seed=seed,
+                start=start,
+            )
+            if fallback_result is not None:
+                return fallback_result
             return {
                 "response_text": "",
                 "latency_ms": int((time.perf_counter() - start) * 1000),
@@ -99,3 +107,61 @@ class GeminiClient:
                 "error": str(exc),
                 "raw": None,
             }
+
+    def _build_endpoint(self, model: str) -> str:
+        return (
+            "https://generativelanguage.googleapis.com/v1beta/models/"
+            f"{urllib.parse.quote(model)}:generateContent?key={urllib.parse.quote(self.api_key or '')}"
+        )
+
+    def _try_model_fallback(
+        self,
+        *,
+        exc: urllib.error.HTTPError,
+        body: str,
+        prompt: str,
+        model: str,
+        temperature: float,
+        seed: int | None,
+        start: float,
+    ) -> dict[str, Any] | None:
+        if exc.code != 404 or "-latest" in model:
+            return None
+        if "is not found" not in body:
+            return None
+
+        fallback_model = f"{model}-latest"
+        request = urllib.request.Request(
+            self._build_endpoint(fallback_model),
+            data=json.dumps(
+                {
+                    "contents": [{"parts": [{"text": prompt}]}],
+                    "generationConfig": (
+                        {"temperature": temperature, **({"seed": seed} if seed is not None else {})}
+                    ),
+                }
+            ).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=self.timeout_s) as response:
+                raw = json.loads(response.read().decode("utf-8"))
+            candidates = raw.get("candidates", [])
+            parts = candidates[0].get("content", {}).get("parts", []) if candidates else []
+            text = "".join(part.get("text", "") for part in parts)
+            if not str(text).strip():
+                return {
+                    "response_text": "",
+                    "latency_ms": int((time.perf_counter() - start) * 1000),
+                    "error": f"gemini empty output after fallback model={fallback_model}",
+                    "raw": raw,
+                }
+            return {
+                "response_text": text,
+                "latency_ms": int((time.perf_counter() - start) * 1000),
+                "error": None,
+                "raw": raw,
+            }
+        except urllib.error.HTTPError:
+            return None

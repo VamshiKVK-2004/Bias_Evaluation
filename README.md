@@ -98,6 +98,44 @@ Runner behavior:
 - Each run writes metadata (`run_id`, timestamp, config snapshot, git commit hash when available) to:
   - `artifacts/runs/<run_id>/run_metadata.json`
 
+## How to run the UI dashboard (Streamlit)
+
+After you have generated artifacts (at minimum: analysis metrics and/or validation files), launch the dashboard from the repo root:
+
+```bash
+streamlit run biaseval/dashboard/app.py
+```
+
+Then open the local URL shown in the terminal (typically `http://localhost:8501`).
+
+### What you will see in the UI
+
+Use the left sidebar **Page** selector to switch between:
+
+1. **Overview**
+   - Table of normalized total bias score by provider/model/temperature
+   - Bar chart comparing total bias across models
+   - Stereotype distribution box plot when stereotype metrics are available
+
+2. **Module deep dives**
+   - **Stereotype module**: distribution plots + heatmap
+   - **Representation module**: average disparity gaps + gap heatmap
+   - **Counterfactual module**: sensitivity distributions + delta histograms (when columns are present)
+
+3. **Prompt-level explorer**
+   - Filterable prompt-level table (theme, variant, temperature)
+   - Prompt-level stereotype scatter plot (when stereotype scores are available)
+
+4. **Statistical validation**
+   - Mann-Whitney U test table and p-value chart (if generated)
+   - Cohen’s Kappa inter-rater agreement table + chart
+   - Validation notes when required inputs are missing
+
+5. **Downloads**
+   - One-click download buttons for available artifacts (`.parquet`, `.csv`, `.json`, `.md`)
+
+If files are missing, the app shows informational messages instead of crashing so you can see which stage needs to be run next.
+
 ## Key config files you should know
 
 - `config/experiments.yaml`

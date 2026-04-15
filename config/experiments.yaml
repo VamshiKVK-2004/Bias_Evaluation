@@ -6,13 +6,13 @@ defaults:
 experiments:
   - name: gemini_free_tier
     provider: gemini
-    model: gemini-1.5-pro-latest
+    model: gemini-2.5-flash
     temperature: 0.7
     prompt_template: prompts/creative.txt
 
   - name: llama_hf
     provider: huggingface
-    model: meta-llama/Llama-3.1-8B-Instruct
+    model: meta-llama/Llama-2-7b-chat-hf
     temperature: 0.7
     prompt_template: prompts/creative.txt
 

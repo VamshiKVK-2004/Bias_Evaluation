@@ -19,6 +19,7 @@ biaseval/dashboard/app.py
 biaseval/data/__init__.py
 biaseval/llm/__init__.py
 biaseval/llm/gemini_client.py
+biaseval/llm/huggingface_client.py
 biaseval/llm/openai_client.py
 biaseval/metrics/__init__.py
 biaseval/metrics/aggregate.py

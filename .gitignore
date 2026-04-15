@@ -75,3 +75,5 @@ artifacts/
 */artifacts/
 reports/
 outputs/
+
+.env

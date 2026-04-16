@@ -449,18 +449,41 @@ def _render_validation_section() -> None:
             st.caption("Validation notes")
             st.write("\n".join([f"- {note}" for note in notes]))
     else:
+        if "skipped" not in mann_whitney.columns:
+            mann_whitney["skipped"] = False
+        if "p_value" not in mann_whitney.columns:
+            mann_whitney["p_value"] = np.nan
+        mann_whitney["p_value"] = pd.to_numeric(mann_whitney["p_value"], errors="coerce")
+
         mann_whitney["significant"] = np.where(
-            (~mann_whitney.get("skipped", False)) & (mann_whitney["p_value"] < 0.05),
+            (~mann_whitney["skipped"].fillna(False)) & (mann_whitney["p_value"] < 0.05),
             "Yes (p < 0.05)",
             "No",
         )
+        total_tests = int((~mann_whitney["skipped"].fillna(False)).sum())
+        significant_tests = int((mann_whitney["significant"] == "Yes (p < 0.05)").sum())
+        skipped_tests = int(mann_whitney["skipped"].fillna(False).sum())
+
         st.subheader("Mann-Whitney U tests")
         st.caption("Significance threshold: p < 0.05")
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Valid tests", total_tests)
+        c2.metric("Significant", significant_tests)
+        c3.metric("Skipped", skipped_tests)
         st.dataframe(mann_whitney, use_container_width=True)
 
-        plot_ready = mann_whitney.dropna(subset=["p_value"]).copy()
+        plot_ready = mann_whitney.loc[~mann_whitney["skipped"].fillna(False)].dropna(subset=["p_value"]).copy()
         if not plot_ready.empty:
-            plot_ready["comparison"] = plot_ready["group_column"] + ": " + plot_ready["group_a"] + " vs " + plot_ready["group_b"]
+            for required in ["group_column", "group_a", "group_b"]:
+                if required not in plot_ready.columns:
+                    plot_ready[required] = "unknown"
+            plot_ready["comparison"] = (
+                plot_ready["group_column"].astype(str)
+                + ": "
+                + plot_ready["group_a"].astype(str)
+                + " vs "
+                + plot_ready["group_b"].astype(str)
+            )
             p_chart = px.bar(
                 plot_ready,
                 x="comparison",
@@ -470,6 +493,8 @@ def _render_validation_section() -> None:
             )
             p_chart.add_hline(y=0.05, line_dash="dash", line_color="red", annotation_text="p = 0.05")
             st.plotly_chart(p_chart, use_container_width=True)
+        else:
+            st.info("No valid p-values available yet. This usually means tests were skipped due to low sample size.")
 
     kappa_rows = pd.DataFrame(report.get("kappa", {}).get("pairwise", []))
     if kappa_rows.empty and kappa_report:
@@ -480,8 +505,17 @@ def _render_validation_section() -> None:
     if kappa_rows.empty:
         st.info("No pairwise kappa rows found yet. Add overlapping labels in `data/manual_labels.csv` (rater_1/rater_2/...).")
     else:
+        if "kappa" in kappa_rows.columns:
+            kappa_rows["kappa"] = pd.to_numeric(kappa_rows["kappa"], errors="coerce")
+            st.metric("Average kappa", f"{kappa_rows['kappa'].mean():.3f}" if not kappa_rows["kappa"].dropna().empty else "N/A")
         st.dataframe(kappa_rows, use_container_width=True)
-        kappa_rows["rater_pair"] = kappa_rows["rater_a"] + " vs " + kappa_rows["rater_b"]
+        if "rater_a" not in kappa_rows.columns:
+            kappa_rows["rater_a"] = "unknown"
+        if "rater_b" not in kappa_rows.columns:
+            kappa_rows["rater_b"] = "unknown"
+        if "interpretation" not in kappa_rows.columns:
+            kappa_rows["interpretation"] = "Unlabeled"
+        kappa_rows["rater_pair"] = kappa_rows["rater_a"].astype(str) + " vs " + kappa_rows["rater_b"].astype(str)
         k_chart = px.bar(
             kappa_rows,
             x="rater_pair",

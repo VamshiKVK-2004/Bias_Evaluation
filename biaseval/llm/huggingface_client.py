@@ -15,7 +15,12 @@ class HuggingFaceClient:
     """Minimal Hugging Face Inference API wrapper for text generation models."""
 
     def __init__(self, api_key: str | None = None, timeout_s: int = 60) -> None:
-        self.api_key = api_key or os.getenv("HUGGINGFACE_API_KEY") or os.getenv("HF_TOKEN")
+        self.api_key = (
+            api_key
+            or os.getenv("HUGGINGFACE_API_KEY")
+            or os.getenv("HF_TOKEN")
+            or os.getenv("HUGGINGFACEHUB_API_TOKEN")
+        )
         self.timeout_s = timeout_s
         self.base_url = os.getenv(
             "HUGGINGFACE_INFERENCE_BASE_URL",
@@ -38,7 +43,7 @@ class HuggingFaceClient:
             return {
                 "response_text": "",
                 "latency_ms": int((time.perf_counter() - start) * 1000),
-                "error": "missing HUGGINGFACE_API_KEY/HF_TOKEN",
+                "error": "missing HUGGINGFACE_API_KEY/HF_TOKEN/HUGGINGFACEHUB_API_TOKEN",
                 "raw": None,
             }
 

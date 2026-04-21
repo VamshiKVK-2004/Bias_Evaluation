@@ -49,7 +49,11 @@ GEMINI_API_KEY=your_gemini_key
 HUGGINGFACE_API_KEY=your_huggingface_token
 # Optional alias used by some Hugging Face tooling
 # HF_TOKEN=your_huggingface_token
+# Optional alias used by huggingface_hub
+# HUGGINGFACEHUB_API_TOKEN=your_huggingface_token
 ```
+
+`biaseval.run` loads `.env` with override enabled, so values in your project `.env` replace any stale provider tokens already set in your shell/session.
 
 You can include only the providers used in `config/experiments.yaml`.
 

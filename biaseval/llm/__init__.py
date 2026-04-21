@@ -33,7 +33,11 @@ def _provider_has_credentials(provider: str) -> bool:
     if provider == "gemini":
         return bool(os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY"))
     if provider == "huggingface":
-        return bool(os.getenv("HUGGINGFACE_API_KEY") or os.getenv("HF_TOKEN"))
+        return bool(
+            os.getenv("HUGGINGFACE_API_KEY")
+            or os.getenv("HF_TOKEN")
+            or os.getenv("HUGGINGFACEHUB_API_TOKEN")
+        )
     return False
 
 

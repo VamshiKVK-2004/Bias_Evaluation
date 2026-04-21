@@ -137,7 +137,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> None:
-    load_dotenv()
+    # Override existing shell variables so local .env updates take effect immediately.
+    load_dotenv(override=True)
     args = build_parser().parse_args()
 
     if args.max_prompts is not None:
